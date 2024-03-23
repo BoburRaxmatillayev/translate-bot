@@ -17,6 +17,7 @@ from middlewares.throttling import ThrottlingMiddleware #new
 from states.reklama import Adverts
 from aiogram.types import InlineKeyboardButton
 from aiogram.utils.keyboard import InlineKeyboardBuilder
+from translate import Translator
 import time 
 ADMINS = config.ADMINS
 TOKEN = config.BOT_TOKEN
@@ -52,18 +53,18 @@ async def kanalga_obuna(message:Message):
 
 
 #Admin panel uchun
-@dp.message(Command("admin"),IsBotAdminFilter(ADMINS))
+@dp.message(Command("admin"))
 async def is_admin(message:Message):
     await message.answer(text="Admin menu",reply_markup=admin_keyboard.admin_button)
 
 
-@dp.message(F.text=="Foydalanuvchilar soni",IsBotAdminFilter(ADMINS))
+@dp.message(F.text=="Foydalanuvchilar soni")
 async def users_count(message:Message):
     counts = db.count_users()
     text = f"Botimizda {counts[0]} ta foydalanuvchi bor"
     await message.answer(text=text)
 
-@dp.message(F.text=="Reklama yuborish",IsBotAdminFilter(ADMINS))
+@dp.message(F.text=="Reklama yuborish")
 async def advert_dp(message:Message,state:FSMContext):
     await state.set_state(Adverts.adverts)
     await message.answer(text="Reklama yuborishingiz mumkin !")
@@ -86,6 +87,21 @@ async def send_advert(message:Message,state:FSMContext):
     await message.answer(f"Reklama {count}ta foydalanuvchiga yuborildi")
     await state.clear()
 
+
+@dp.message(F.text)
+async def english(message:Message):
+    translator = Translator(from_lang="ru",to_lang="eng")
+    text_Eng = message.text
+    text_Rus = translator.translate(text_Eng)
+    await message.answer(text_Rus)
+
+
+@dp.message(F.text)
+async def russia(message:Message):
+    translator = Translator(from_lang="eng",to_lang="ru")
+    text_Rus = message.text
+    text_Eng = translator.translate(text_Rus)
+    await message.answer(text_Eng)
 
 
 
@@ -118,6 +134,7 @@ async def main() -> None:
     dp.message.middleware(ThrottlingMiddleware(slow_mode_delay=0.5))
     await dp.start_polling(bot)
     
+
 
 
 
